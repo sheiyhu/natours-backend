@@ -1,4 +1,5 @@
 import express from 'express';
+import { authController } from '../user/authController';
 import { tourController } from './tourController';
 import { tourValidation } from './tourValidator';
 
@@ -24,8 +25,15 @@ router
   .patch(
     tourValidation.validateMongoDBid,
     tourValidation.validateUpdateTour,
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide'),
     tourController.updateTour
   )
-  .delete(tourValidation.validateMongoDBid, tourController.deleteTour);
+  .delete(
+    tourValidation.validateMongoDBid,
+    authController.protect,
+    authController.restrictTo('admin', 'lead-guide'),
+    tourController.deleteTour
+  );
 
 export default router;
