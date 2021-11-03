@@ -35,7 +35,7 @@ export abstract class authController {
         password: req.body.password,
       });
 
-      this.createSendToken(newUser, 201, res);
+      authController.createSendToken(newUser, 201, res);
     }
   );
 
@@ -50,12 +50,15 @@ export abstract class authController {
       // 2) Check if user exists && password is correct
       const user = await User.findOne({ email }).select('+password');
 
-      if (!user || !(await this.correctPassword(password, user.password))) {
+      if (
+        !user ||
+        !(await authController.correctPassword(password, user.password))
+      ) {
         return next(new AppError('Incorrect email or password', 401));
       }
 
       // 3) If everything ok, send token to client
-      this.createSendToken(user, 200, res);
+      authController.createSendToken(user, 200, res);
     }
   );
 
@@ -195,7 +198,7 @@ export abstract class authController {
 
       // 3) Update changedPasswordAt property for the user
       // 4) Log the user in, send JWT
-      this.createSendToken(user, 200, res);
+      authController.createSendToken(user, 200, res);
     }
   );
 
@@ -218,18 +221,18 @@ export abstract class authController {
       // User.findByIdAndUpdate will NOT work as intended!
 
       // 4) Log user in, send JWT
-      this.createSendToken(user, 200, res);
+      authController.createSendToken(user, 200, res);
     }
   );
 
   static signToken = (id: string) => {
     return jwt.sign({ id }, process.env.JWT_SECRET as string, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
+      expiresIn: process.env.EXPIRES_IN,
     });
   };
 
   static createSendToken = (user: any, statusCode: number, res: Response) => {
-    const token = this.signToken(user._id);
+    const token = authController.signToken(user._id);
     let cookieOptions = {
       expires: new Date(Date.now() + cookieExpiresIn * 24 * 60 * 60 * 1000),
       httpOnly: true,

@@ -44,7 +44,7 @@ export abstract class userController {
       }
 
       // 2) Filtered out unwanted fields names that are not allowed to be updated
-      const filteredBody = this.filterObj(req.body, 'name', 'email');
+      const filteredBody = userController.filterObj(req.body, 'name', 'email');
 
       // 3) Update user document
       const updatedUser = await User.findByIdAndUpdate(

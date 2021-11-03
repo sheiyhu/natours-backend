@@ -3,7 +3,6 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
-import xss from 'xss-clean';
 import hpp from 'hpp';
 
 import { ErrorHelper } from './utils/errorHelper';
@@ -17,12 +16,11 @@ const limiter = rateLimit({
   message: 'Too many requests, Please try again in an hour',
 });
 
-app.use(helmet);
+app.use(helmet());
 app.use(morgan('dev'));
 app.use('/api', limiter);
 app.use(express.json());
 app.use(mongoSanitize());
-app.use(xss());
 app.use(
   hpp({
     whitelist: [

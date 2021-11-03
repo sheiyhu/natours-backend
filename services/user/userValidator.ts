@@ -15,6 +15,10 @@ export abstract class userValidation {
       name: Joi.string().required(),
       email: Joi.string().email().required(),
       password: Joi.string().min(8).required(),
+      photo: Joi.string().optional(),
+      role: Joi.string()
+        .valid('user', 'guide', 'lead-guide', 'admin')
+        .optional(),
     });
 
     await ValidationHelper.validate(req.body, bodySchema).catch((e) => next(e));
