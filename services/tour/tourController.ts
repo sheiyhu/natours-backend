@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { filterHelper } from '../../utils/filterHelper';
 import { Tour } from '../../models/tourModel';
+import { catchAsync } from '../../utils/catchAsync';
 
 export abstract class tourController {
   public static aliasTopTours = (
@@ -14,12 +15,8 @@ export abstract class tourController {
     next();
   };
 
-  public static getAllTours = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
+  public static getAllTours = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
       const tours = await filterHelper.buildQuery(Tour.find(), req.query);
 
       res.status(200).json({
@@ -29,20 +26,11 @@ export abstract class tourController {
           tours,
         },
       });
-    } catch (err) {
-      res.status(404).json({
-        status: 'fail',
-        message: err,
-      });
     }
-  };
+  );
 
-  public static getTour = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
+  public static getTour = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
       const tour = await Tour.findById(req.params.id);
 
       res.status(200).json({
@@ -51,20 +39,11 @@ export abstract class tourController {
           tour,
         },
       });
-    } catch (err) {
-      res.status(404).json({
-        status: 'fail',
-        message: err,
-      });
     }
-  };
+  );
 
-  public static createTour = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
+  public static createTour = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
       const newTour = await Tour.create(req.body);
 
       res.status(201).json({
@@ -73,20 +52,11 @@ export abstract class tourController {
           tour: newTour,
         },
       });
-    } catch (err) {
-      res.status(400).json({
-        status: 'fail',
-        message: err,
-      });
     }
-  };
+  );
 
-  public static updateTour = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
+  public static updateTour = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
       const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true,
@@ -98,40 +68,22 @@ export abstract class tourController {
           tour,
         },
       });
-    } catch (err) {
-      res.status(404).json({
-        status: 'fail',
-        message: err,
-      });
     }
-  };
+  );
 
-  public static deleteTour = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
+  public static deleteTour = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
       await Tour.findByIdAndDelete(req.params.id);
 
       res.status(204).json({
         status: 'success',
         data: null,
       });
-    } catch (err) {
-      res.status(404).json({
-        status: 'fail',
-        message: err,
-      });
     }
-  };
+  );
 
-  public static getTourStats = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
+  public static getTourStats = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
       const stats = await Tour.aggregate([
         {
           $match: { ratingsAverage: { $gte: 4.5 } },
@@ -158,20 +110,11 @@ export abstract class tourController {
           stats,
         },
       });
-    } catch (err) {
-      res.status(404).json({
-        status: 'fail',
-        message: err,
-      });
     }
-  };
+  );
 
-  public static getMonthlyPlan = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
+  public static getMonthlyPlan = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
       const year = (req.params.year as unknown as number) * 1;
 
       const plan = await Tour.aggregate([
@@ -215,11 +158,6 @@ export abstract class tourController {
           plan,
         },
       });
-    } catch (err) {
-      res.status(404).json({
-        status: 'fail',
-        message: err,
-      });
     }
-  };
+  );
 }
