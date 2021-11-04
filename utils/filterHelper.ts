@@ -1,4 +1,4 @@
-export abstract class filterHelper {
+export abstract class FilterHelper {
   public static filter(query: any, filterOptions: any) {
     const filterObj = { ...filterOptions };
     const excludedFields = ['page', 'sort', 'limit', 'fields'];

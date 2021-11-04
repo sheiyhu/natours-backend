@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { NextFunction, Request, Response } from 'express';
 import { ValidationHelper } from '../../utils/validationHelper';
 
-export abstract class tourValidation {
+export abstract class TourValidation {
   public static async validateCreateTour(
     req: Request,
     res: Response,

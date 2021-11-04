@@ -1,38 +1,34 @@
 import express from 'express';
-import { authController } from './authController';
-import { userController } from './userController';
-import { userValidation } from './userValidator';
+import { AuthController } from './authController';
+import { UserController } from './userController';
+import { UserValidation } from './userValidator';
 
 const router = express.Router();
 
 router.post(
   '/signup',
-  userValidation.validateCreateUser,
-  authController.signup
+  UserValidation.validateCreateUser,
+  AuthController.signup
 );
-router.post('/login', userValidation.validateLoginUser, authController.login);
+router.post('/login', UserValidation.validateLoginUser, AuthController.login);
+router.post('/forgotPassword', AuthController.forgotPassword);
+router.patch('/resetPassword/:token', AuthController.resetPassword);
 
-router.post('/forgotPassword', authController.forgotPassword);
-router.patch('/resetPassword/:token', authController.resetPassword);
+router.use(AuthController.protect);
 
-router.patch(
-  '/updateMyPassword',
-  authController.protect,
-  authController.updatePassword
-);
+router.patch('/updateMyPassword', AuthController.updatePassword);
+router.get('/me', UserController.getMe, UserController.getUser);
+router.patch('/updateMe', UserController.updateMe);
+router.delete('/deleteMe', UserController.deleteMe);
 
-router.patch('/updateMe', authController.protect, userController.updateMe);
-router.delete('/deleteMe', authController.protect, userController.deleteMe);
+router.use(AuthController.restrictTo('admin'));
 
-router
-  .route('/')
-  .get(userController.getAllUsers)
-  .post(userController.createUser);
+router.route('/').get(UserController.getAllUsers);
 
 router
   .route('/:id')
-  .get(userController.getUser)
-  .patch(userController.updateUser)
-  .delete(userController.deleteUser);
+  .get(UserController.getUser)
+  .patch(UserController.updateUser)
+  .delete(UserController.deleteUser);
 
 export default router;

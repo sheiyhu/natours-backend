@@ -2,9 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { User } from '../../models/userModel';
 import { catchAsync } from '../../utils/catchAsync';
 import { AppError } from '../../utils/errorHelper';
+import { FactoryHelper } from '../../utils/factoryHelper';
 import { AuthenticatedRequest } from './authController';
 
-export abstract class userController {
+export abstract class UserController {
   static filterObj = (
     obj: { [x: string]: string },
     ...allowedFields: string[]
@@ -16,20 +17,10 @@ export abstract class userController {
     return newObj;
   };
 
-  public static getAllUsers = catchAsync(
-    async (req: Request, res: Response, next) => {
-      const users = await User.find();
-
-      // SEND RESPONSE
-      res.status(200).json({
-        status: 'success',
-        results: users.length,
-        data: {
-          users,
-        },
-      });
-    }
-  );
+  public static getMe = (req: any, res: Response, next: NextFunction) => {
+    req.params.id = req.user._id;
+    next();
+  };
 
   public static updateMe = catchAsync(
     async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -44,7 +35,7 @@ export abstract class userController {
       }
 
       // 2) Filtered out unwanted fields names that are not allowed to be updated
-      const filteredBody = userController.filterObj(req.body, 'name', 'email');
+      const filteredBody = UserController.filterObj(req.body, 'name', 'email');
 
       // 3) Update user document
       const updatedUser = await User.findByIdAndUpdate(
@@ -76,28 +67,10 @@ export abstract class userController {
     }
   );
 
-  public static getUser = (req: Request, res: Response) => {
-    res.status(500).json({
-      status: 'error',
-      message: 'This route is not yet defined!',
-    });
-  };
-  public static createUser = (req: Request, res: Response) => {
-    res.status(500).json({
-      status: 'error',
-      message: 'This route is not yet defined!',
-    });
-  };
-  public static updateUser = (req: Request, res: Response) => {
-    res.status(500).json({
-      status: 'error',
-      message: 'This route is not yet defined!',
-    });
-  };
-  public static deleteUser = (req: Request, res: Response) => {
-    res.status(500).json({
-      status: 'error',
-      message: 'This route is not yet defined!',
-    });
-  };
+  public static getUser = FactoryHelper.getOne(User);
+  public static getAllUsers = FactoryHelper.getAll(User);
+
+  // Do NOT update passwords with this!
+  public static updateUser = FactoryHelper.updateOne(User);
+  public static deleteUser = FactoryHelper.deleteOne(User);
 }

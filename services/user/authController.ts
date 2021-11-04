@@ -26,7 +26,7 @@ export enum UserTypes {
   LeadGuide = 'lead-guide',
 }
 
-export abstract class authController {
+export abstract class AuthController {
   public static signup = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const newUser = await User.create({
@@ -35,7 +35,7 @@ export abstract class authController {
         password: req.body.password,
       });
 
-      authController.createSendToken(newUser, 201, res);
+      AuthController.createSendToken(newUser, 201, res);
     }
   );
 
@@ -52,13 +52,13 @@ export abstract class authController {
 
       if (
         !user ||
-        !(await authController.correctPassword(password, user.password))
+        !(await AuthController.correctPassword(password, user.password))
       ) {
         return next(new AppError('Incorrect email or password', 401));
       }
 
       // 3) If everything ok, send token to client
-      authController.createSendToken(user, 200, res);
+      AuthController.createSendToken(user, 200, res);
     }
   );
 
@@ -198,7 +198,7 @@ export abstract class authController {
 
       // 3) Update changedPasswordAt property for the user
       // 4) Log the user in, send JWT
-      authController.createSendToken(user, 200, res);
+      AuthController.createSendToken(user, 200, res);
     }
   );
 
@@ -221,7 +221,7 @@ export abstract class authController {
       // User.findByIdAndUpdate will NOT work as intended!
 
       // 4) Log user in, send JWT
-      authController.createSendToken(user, 200, res);
+      AuthController.createSendToken(user, 200, res);
     }
   );
 
@@ -232,7 +232,7 @@ export abstract class authController {
   };
 
   static createSendToken = (user: any, statusCode: number, res: Response) => {
-    const token = authController.signToken(user._id);
+    const token = AuthController.signToken(user._id);
     let cookieOptions = {
       expires: new Date(Date.now() + cookieExpiresIn * 24 * 60 * 60 * 1000),
       httpOnly: true,
