@@ -1,13 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
+import sharp from 'sharp';
 import { Tour } from '../../models/tourModel';
 import { catchAsync } from '../../utils/catchAsync';
 import { AppError } from '../../utils/errorHelper';
 import { FactoryHelper } from '../../utils/factoryHelper';
+import { upload } from '../../utils/multerHelper';
 
 export abstract class TourController {
   public static aliasTopTours = (
     req: Request,
-    res: Response,
+    _res: Response,
     next: NextFunction
   ) => {
     req.query.limit = '5';
@@ -16,6 +18,43 @@ export abstract class TourController {
     next();
   };
 
+  public static uploadTourImages = upload.fields([
+    { name: 'imageCover', maxCount: 1 },
+    { name: 'images', maxCount: 3 },
+  ]);
+
+  public static resizeTourImages = catchAsync(
+    async (req, _res, next: NextFunction) => {
+      if (!req.files.imageCover || !req.files.images) return next();
+
+      // Cover Image
+      req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
+
+      await sharp(req.files.imageCover[0].buffer)
+        .resize(2000, 1333)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+        .toFile(`public/img/tours/${req.body.imageCover}`);
+
+      req.body.images = [];
+
+      await Promise.all(
+        req.files.images.map(async (file: any, i: number) => {
+          const filename = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
+          await sharp(file.buffer)
+            .resize(2000, 1333)
+            .toFormat('jpeg')
+            .jpeg({ quality: 90 })
+            .toFile(`public/img/tours/${filename}`);
+
+          req.body.images.push(filename);
+        })
+      );
+
+      next();
+    }
+  );
+
   public static getAllTours = FactoryHelper.getAll(Tour);
   public static getTour = FactoryHelper.getOne(Tour, { path: 'reviews' });
   public static createTour = FactoryHelper.createOne(Tour);
@@ -23,7 +62,7 @@ export abstract class TourController {
   public static deleteTour = FactoryHelper.deleteOne(Tour);
 
   public static getTourStats = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (_req: Request, res: Response, _next: NextFunction) => {
       const stats = await Tour.aggregate([
         {
           $match: { ratingsAverage: { $gte: 4.5 } },
@@ -54,7 +93,7 @@ export abstract class TourController {
   );
 
   public static getMonthlyPlan = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (req: Request, res: Response, _next: NextFunction) => {
       const year = (req.params.year as unknown as number) * 1;
 
       const plan = await Tour.aggregate([
