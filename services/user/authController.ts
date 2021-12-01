@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, request } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -33,6 +33,7 @@ export abstract class AuthController {
         name: req.body.name,
         email: req.body.email,
         password: req.body.password,
+        role: req.body.role ? req.body.role : '',
       });
 
       AuthController.createSendToken(newUser, 201, res);
@@ -71,6 +72,8 @@ export abstract class AuthController {
         req.headers.authorization.startsWith('Bearer')
       ) {
         token = req.headers.authorization.split(' ')[1];
+      } else if (req.cookies.jwt) {
+        token = req.cookies.jwt;
       }
 
       if (!token) {
@@ -111,9 +114,47 @@ export abstract class AuthController {
 
       // GRANT ACCESS TO PROTECTED ROUTE
       req.user = currentUser;
+      res.locals.user = currentUser;
+
       next();
     }
   );
+
+  public static isLoggedIn = async (
+    req: any,
+    res: Response,
+    next: NextFunction
+  ) => {
+    if (req.cookies.jwt) {
+      try {
+        // 1) verify token
+
+        const decoded: any = jwt.verify(
+          req.cookies.jwt,
+          process.env.JWT_SECRET as string
+        );
+
+        // 2) Check if user still exists
+        const currentUser = await User.findById(decoded.id);
+        if (!currentUser) {
+          return next();
+        }
+
+        // 3) Check if user changed password after the token was issued
+        if (currentUser.changedPasswordAfter(decoded.iat)) {
+          return next();
+        }
+
+        // THERE IS A LOGGED IN USER
+        res.locals.user = currentUser;
+        return next();
+      } catch (err) {
+        return next();
+      }
+    }
+    console.log('outside');
+    next();
+  };
 
   public static restrictTo = (...roles: string[]) => {
     return (req: any, res: Response, next: NextFunction) => {
@@ -224,6 +265,15 @@ export abstract class AuthController {
       AuthController.createSendToken(user, 200, res);
     }
   );
+
+  public static logout = (req: Request, res: Response) => {
+    res.cookie('jwt', 'loggedout', {
+      expires: new Date(Date.now() + 5 * 1000),
+      httpOnly: true,
+    });
+
+    res.status(200).json({ status: 'success' });
+  };
 
   static signToken = (id: string) => {
     return jwt.sign({ id }, process.env.JWT_SECRET as string, {

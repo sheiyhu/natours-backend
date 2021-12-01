@@ -1,9 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
+import multer from 'multer';
 import { User } from '../../models/userModel';
 import { catchAsync } from '../../utils/catchAsync';
 import { AppError } from '../../utils/errorHelper';
 import { FactoryHelper } from '../../utils/factoryHelper';
 import { AuthenticatedRequest } from './authController';
+
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/img/users');
+  },
+  filename: (req: AuthenticatedRequest, file, cb) => {
+    const ext = file.mimetype.split('/')[1];
+    cb(null, `user-${req.user._id}-${Date.now()}.${ext}`);
+  },
+});
+const multerFilter = (req: any, file: any, cb: any) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images.', 400), false);
+  }
+};
+const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
 
 export abstract class UserController {
   static filterObj = (
@@ -21,6 +40,8 @@ export abstract class UserController {
     req.params.id = req.user._id;
     next();
   };
+
+  public static uploadUserPhoto = upload.single('photo');
 
   public static updateMe = catchAsync(
     async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
