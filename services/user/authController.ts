@@ -6,7 +6,7 @@ import { promisify } from 'util';
 import { User } from '../../models/userModel';
 import { catchAsync } from '../../utils/catchAsync';
 import { AppError } from '../../utils/errorHelper';
-import { sendEmail } from '../../utils/emailHelper';
+import { EmailHelper } from '../../utils/emailHelper';
 
 const cookieExpiresIn: any = process.env.JWT_COOKIE_EXPIRES_IN;
 
@@ -36,6 +36,8 @@ export abstract class AuthController {
         role: req.body.role ? req.body.role : '',
       });
 
+      const url = `${req.protocol}://${req.get('host')}/me`;
+      await EmailHelper.sendWelcome(newUser, url);
       AuthController.createSendToken(newUser, 201, res);
     }
   );
@@ -186,14 +188,8 @@ export abstract class AuthController {
         'host'
       )}/api/v1/users/resetPassword/${resetToken}`;
 
-      const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
-
       try {
-        await sendEmail({
-          to: user.email,
-          subject: 'Your password reset token (valid for 10 min)',
-          message,
-        });
+        await EmailHelper.sendPasswordReset(user, resetURL);
 
         res.status(200).json({
           status: 'success',
