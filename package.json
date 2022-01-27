@@ -7,7 +7,7 @@
     "start:dev": "nodemon server.ts",
     "start:prod": "nodemon server.ts NODE_ENV=production",
     "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
-    "build:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
+    "build:js": "parcel build ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
   },
   "author": "Shehu",
   "license": "ISC",
