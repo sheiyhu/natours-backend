@@ -6,7 +6,7 @@
   "scripts": {
     "start:dev": "nodemon server.ts",
     "build": "tsc && rm -rf ./dist/views && cp -rf ./views ./dist/views && rm -rf ./dist/public && cp -rf ./public ./dist/public",
-    "prod": "npm run build && node ./dist/server.js",
+    "prod": "node ./dist/server.js",
     "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
     "build:js": "parcel build ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
   },
@@ -55,6 +55,9 @@
     "@types/pug": "^2.0.5",
     "@types/sharp": "^0.29.4",
     "nodemon": "^2.0.14",
-    "parcel-bundler": "^1.12.5"
+    "parcel-bundler": "^1.12.5",
+    "ts-node": "^10.4.0",
+    "tsc": "^2.0.4",
+    "typescript": "^4.5.5"
   }
 }
