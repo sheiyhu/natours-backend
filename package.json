@@ -5,7 +5,8 @@
   "main": "server.ts",
   "scripts": {
     "start:dev": "nodemon server.ts",
-    "start:prod": "nodemon server.ts NODE_ENV=production",
+    "build": "tsc",
+    "prod": "build && node ./dist/app/app.js",
     "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
     "build:js": "parcel build ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
   },
