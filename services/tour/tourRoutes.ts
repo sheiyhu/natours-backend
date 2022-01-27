@@ -40,11 +40,10 @@ router
     TourController.createTour
   );
 
-router.use(TourValidation.validateMongoDBid);
 router
   .route('/:id')
-  .get(TourController.getTour)
   .patch(
+    TourValidation.validateMongoDBid,
     TourValidation.validateUpdateTour,
     AuthController.protect,
     AuthController.restrictTo('admin', 'lead-guide'),
@@ -53,9 +52,12 @@ router
     TourController.updateTour
   )
   .delete(
+    TourValidation.validateMongoDBid,
     AuthController.protect,
     AuthController.restrictTo('admin', 'lead-guide'),
     TourController.deleteTour
   );
+
+router.route('/:slug').get(TourValidation.validateSlug, TourController.getTour);
 
 export default router;

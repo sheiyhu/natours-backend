@@ -1,84 +1,50 @@
-import nodemailer, { Transporter } from 'nodemailer';
-import pug from 'pug';
-import htmlToText from 'html-to-text';
+import sgMail from '@sendgrid/mail';
+import axios from 'axios';
 
-const prodTransporter: Transporter = nodemailer.createTransport({
-  service: 'SendGrid',
-  auth: {
-    user: process.env.SENDGRID_USERNAME,
-    pass: process.env.SENDGRID_PASSWORD,
-  },
-});
+const SEND_API_KEY = process.env.SEND_API_KEY as string;
+const WELCOME_TEMPLATE_ID = process.env.WELCOME_TEMPLATE_ID as string;
 
-const devTransporter: Transporter = nodemailer.createTransport({
-  host: 'smtp.mailtrap.io',
-  port: 25,
-  auth: {
-    user: process.env.EMAIL_USERNAME,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+sgMail.setApiKey(SEND_API_KEY);
 
 export abstract class EmailHelper {
-  // Send the actual email
-  static send = async (
-    template: string,
-    user: any,
-    subject: string,
-    url: string
-  ) => {
-    // 1) Render HTML based on a pug template
-    const html = pug.renderFile(`${__dirname}/../views/email/${template}.pug`, {
-      firstName: user.name.split(' ')[0],
-      url,
-
-      subject,
-    });
-
-    // 2) Define email options
-    const mailOptions = {
-      from: `Sheiyhu <${process.env.EMAIL_FROM}>`,
-      to: user.email,
-      subject,
-      html,
-      text: htmlToText.convert(html),
+  public static emailMessage = (email: string, name: string, url: string) => {
+    return {
+      from: {
+        name: 'Shehu',
+        email: 'engr.nameless@gmail.com',
+      },
+      to: email,
+      templateId: WELCOME_TEMPLATE_ID,
+      dynamicTemplateData: {
+        name,
+        url,
+      },
     };
-
-    // 3) Create a transport and send email
-    if (process.env.NODE_ENV === 'production') {
-      await prodTransporter
-        .sendMail(mailOptions)
-        .then((msgInfo) => {
-          console.log(msgInfo);
-          return true;
-        })
-        .catch((err) => {
-          console.log(err);
-          return err;
-        });
-    } else {
-      await devTransporter
-        .sendMail(mailOptions)
-        .then((msgInfo) => {
-          console.log(msgInfo);
-          return true;
-        })
-        .catch((err) => {
-          console.log(err);
-          return err;
-        });
-    }
-  };
-  public static sendWelcome = async (user: any, url: string) => {
-    await EmailHelper.send('welcome', user, 'welcome', url);
   };
 
-  public static sendPasswordReset = async (user: any, url: string) => {
-    await EmailHelper.send(
-      'passwordReset',
-      user,
-      'Your password reset token ( valid for only 10 minutes )',
-      url
-    );
+  public static sendWelcome = async (emailData: {
+    from: {
+      name: string;
+      email: string;
+    };
+    to: string;
+    templateId: string;
+    dynamicTemplateData: {
+      name: string;
+      url: string;
+    };
+  }) => {
+    await sgMail.send(emailData);
   };
+
+  // public static sendPasswordReset = async (user: any, url: string) => {
+  //   await EmailHelper.send(
+  //     'passwordReset',
+  //     user,
+  //     'Your password reset token ( valid for only 10 minutes )',
+  //     url
+  //   );
+  // };
 }
+
+// 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

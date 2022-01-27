@@ -20,7 +20,7 @@ export abstract class UserController {
   };
 
   public static getMe = (req: any, res: Response, next: NextFunction) => {
-    req.params.id = req.user._id;
+    req.params.id = req.user.id;
     next();
   };
 
@@ -30,7 +30,7 @@ export abstract class UserController {
     async (req: any, res: Response, next: NextFunction) => {
       if (!req.file) return next();
 
-      req.file.filename = `user-${req.user._id}-${Date.now()}.jpeg`;
+      req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
 
       await sharp(req.file.buffer)
         .resize(500, 500)
@@ -60,7 +60,7 @@ export abstract class UserController {
 
       // 3) Update user document
       const updatedUser = await User.findByIdAndUpdate(
-        req.user._id,
+        req.user.id,
         filteredBody,
         {
           new: true,
@@ -79,7 +79,7 @@ export abstract class UserController {
 
   public static deleteMe = catchAsync(
     async (req: AuthenticatedRequest, res: Response) => {
-      await User.findByIdAndUpdate(req.user._id, { active: false });
+      await User.findByIdAndUpdate(req.user.id, { active: false });
 
       res.status(204).json({
         status: 'success',

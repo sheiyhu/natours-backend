@@ -56,7 +56,23 @@ export abstract class TourController {
   );
 
   public static getAllTours = FactoryHelper.getAll(Tour);
-  public static getTour = FactoryHelper.getOne(Tour, { path: 'reviews' });
+  public static getTour = catchAsync(async (req, res, next) => {
+    const tour = await Tour.findOne({ slug: req.params.slug }).populate({
+      path: 'reviews',
+      select: 'review rating user -tour',
+    });
+
+    if (!tour) {
+      return next(new AppError('No tour found with that slug', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  });
   public static createTour = FactoryHelper.createOne(Tour);
   public static updateTour = FactoryHelper.updateOne(Tour);
   public static deleteTour = FactoryHelper.deleteOne(Tour);

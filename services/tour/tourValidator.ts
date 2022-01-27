@@ -71,6 +71,20 @@ export abstract class TourValidation {
     );
     return next();
   }
+  public static async validateSlug(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    const paramsSchema = Joi.object().keys({
+      slug: Joi.string().required(),
+    });
+
+    await ValidationHelper.validate(req.params, paramsSchema).catch((e) =>
+      next(e)
+    );
+    return next();
+  }
 
   public static async validateYear(
     req: Request,

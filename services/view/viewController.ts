@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { Booking } from '../../models/bookingModel';
 import { Tour } from './../../models/tourModel';
 import { User } from './../../models/userModel';
 import { catchAsync } from './../../utils/catchAsync';
@@ -68,6 +69,18 @@ export abstract class ViewController {
     res.status(200).render('account', {
       title: 'Your account',
       user: updatedUser,
+    });
+  });
+
+  public static getMyTours = catchAsync(async (req, res, next) => {
+    const bookings = await Booking.find({ user: req.user.id });
+
+    const tourIDs = bookings.map((el: any) => el.tour);
+    const tours = await Tour.find({ _id: { $in: tourIDs } });
+
+    res.status(200).render('overview', {
+      title: 'My Tours',
+      tours,
     });
   });
 }

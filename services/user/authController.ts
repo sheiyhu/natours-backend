@@ -2,11 +2,11 @@ import { Request, Response, NextFunction, request } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { promisify } from 'util';
+// import { promisify } from 'util';
 import { User } from '../../models/userModel';
 import { catchAsync } from '../../utils/catchAsync';
 import { AppError } from '../../utils/errorHelper';
-import { EmailHelper } from '../../utils/emailHelper';
+// import { EmailHelper } from '../../utils/emailHelper';
 
 const cookieExpiresIn: any = process.env.JWT_COOKIE_EXPIRES_IN;
 
@@ -15,7 +15,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export interface UserPayload {
-  _id: string;
+  id: string;
   role: UserTypes;
 }
 
@@ -33,11 +33,16 @@ export abstract class AuthController {
         name: req.body.name,
         email: req.body.email,
         password: req.body.password,
-        role: req.body.role ? req.body.role : '',
       });
 
-      const url = `${req.protocol}://${req.get('host')}/me`;
-      await EmailHelper.sendWelcome(newUser, url);
+      // const url = `${req.protocol}://${req.get('host')}/me`;
+      // const emailData = EmailHelper.emailMessage(
+      //   newUser.email,
+      //   newUser.name.split(' ')[0],
+      //   url
+      // );
+      // console.log(emailData);
+      // await EmailHelper.sendWelcome(emailData);
       AuthController.createSendToken(newUser, 201, res);
     }
   );
@@ -86,12 +91,11 @@ export abstract class AuthController {
           )
         );
       }
-
       // 2) Verification token
-      const v = (token: string) => {
-        jwt.verify(token, process.env.JWT_SECRET as string);
-      };
-      const decoded: any = await promisify(v)(token);
+      const decoded: any = jwt.verify(
+        req.cookies.jwt,
+        process.env.JWT_SECRET as string
+      );
 
       // 3) Check if user still exists
       const currentUser = await User.findById(decoded.id);
@@ -154,7 +158,6 @@ export abstract class AuthController {
         return next();
       }
     }
-    console.log('outside');
     next();
   };
 
@@ -189,7 +192,7 @@ export abstract class AuthController {
       )}/api/v1/users/resetPassword/${resetToken}`;
 
       try {
-        await EmailHelper.sendPasswordReset(user, resetURL);
+        // await EmailHelper.sendPasswordReset(user, resetURL);
 
         res.status(200).json({
           status: 'success',
@@ -242,7 +245,7 @@ export abstract class AuthController {
   public static updatePassword = catchAsync(
     async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
       // 1) Get user from collection
-      const user = await User.findById(req.user._id).select('+password');
+      const user = await User.findById(req.user.id).select('+password');
 
       // 2) Check if POSTed current password is correct
       if (
@@ -253,7 +256,6 @@ export abstract class AuthController {
 
       // 3) If so, update password
       user.password = req.body.password;
-      user.passwordConfirm = req.body.passwordConfirm;
       await user.save();
       // User.findByIdAndUpdate will NOT work as intended!
 

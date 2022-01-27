@@ -84,9 +84,9 @@ export abstract class FactoryHelper {
       res.status(200).json({
         status: 'success',
         results: doc.length,
-        data: {
-          data: doc,
-        },
+        limit: parseInt(req.query.limit),
+        page: parseInt(req.query.page),
+        data: doc,
       });
     });
 }
